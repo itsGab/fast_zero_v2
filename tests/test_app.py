@@ -10,3 +10,11 @@ def test_root():
     response = client.get('/')
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {'message': 'Ola, Mundo!'}
+
+
+# ! aula 02 exerc 01
+def test_html():
+    client = TestClient(app)
+    response = client.get('/html')
+    assert response.status_code == HTTPStatus.OK
+    assert 'Ola Mundo' in response.text
