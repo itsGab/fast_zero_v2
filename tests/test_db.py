@@ -1,4 +1,5 @@
 from dataclasses import asdict
+from datetime import datetime
 
 from sqlalchemy import select
 
@@ -20,5 +21,8 @@ def test_create_user(session, mock_db_time):
         'username': 'walter',
         'password': '12345',
         'email': 'walt@mail.com',
-        'created_at': time
+        'created_at': time,
+        # ! aula 4 exerc 2 - inicio
+        'updated_at': time,
+        # ! aula 4 exerc 2 - fim
     }
