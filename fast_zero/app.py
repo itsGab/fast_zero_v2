@@ -15,7 +15,7 @@ def read_root():
     return {'message': 'Ola, Mundo!'}
 
 
-# ! aula 02 exerc 01
+# ! aula 02 exerc 01 - inicio
 @app.get('/html', response_class=HTMLResponse, deprecated=True)
 def read_html():
     return """
@@ -27,6 +27,9 @@ def read_html():
         <h1> Ola Mundo </h1>
       </body>
     </html>"""
+
+
+# ! aula 02 exerc 01 - fim
 
 
 @app.post('/users/', status_code=HTTPStatus.CREATED, response_model=UserPublic)
@@ -60,3 +63,17 @@ def delete_user(user_id: int):
         )
     del database[user_id - 1]
     return {'message': 'User deleted'}
+
+
+# ! aula 03 exerc 03 - inicio
+@app.get('/user/{user_id}', response_model=UserPublic)
+def read_user_by_id(user_id: int):
+    if user_id > len(database) or user_id < 1:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
+        )
+    user_with_id = database[user_id - 1]
+    return user_with_id
+
+
+# ! aula 03 exerc 03 - fim
