@@ -1,5 +1,4 @@
 from dataclasses import asdict
-from datetime import datetime
 
 from sqlalchemy import select
 

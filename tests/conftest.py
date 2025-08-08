@@ -5,26 +5,42 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session
+from sqlalchemy.pool import StaticPool
 
 from fast_zero.app import app
-from fast_zero.models import table_registry
+from fast_zero.database import get_session
+from fast_zero.models import User, table_registry
 
 
 @pytest.fixture
-def client():
-    return TestClient(app)
+def client(session):
+    # fnc sobreescrever sessao normal com sessoa fixture
+    def get_session_override():
+        return session
+    # com o client, aplica fnc sobreescrever sessao
+    with TestClient(app) as client:
+        # app com a sessao da fixture
+        app.dependency_overrides[get_session] = get_session_override
+        yield client  # chama com a sessao da fixture
+
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
 def session():
     """cria um banco de dados sqlite em memoria"""
-    engine = create_engine('sqlite:///:memory:')
+    engine = create_engine(
+        'sqlite:///:memory:',
+        connect_args={'check_same_thread': False},
+        poolclass=StaticPool,
+    )
     table_registry.metadata.create_all(engine)
 
     with Session(engine) as session:
         yield session
 
     table_registry.metadata.drop_all(engine)
+    engine.dispose()  # * <- adicionado para nao dar warning de conexao aberta
 
 
 @contextmanager
@@ -45,3 +61,16 @@ def _mock_db_time(*, model, time=datetime(2024, 1, 1)):
 @pytest.fixture
 def mock_db_time():
     return _mock_db_time
+
+
+@pytest.fixture
+def user(session):
+    user = User(
+        username='test_user',
+        email='test_user@mail.com',
+        password='test_user_pwd',
+    )
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
