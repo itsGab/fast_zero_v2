@@ -10,6 +10,7 @@ from sqlalchemy.pool import StaticPool
 from fast_zero.app import app
 from fast_zero.database import get_session
 from fast_zero.models import User, table_registry
+from fast_zero.security import get_password_hash
 
 
 @pytest.fixture
@@ -17,6 +18,7 @@ def client(session):
     # fnc sobreescrever sessao normal com sessoa fixture
     def get_session_override():
         return session
+
     # com o client, aplica fnc sobreescrever sessao
     with TestClient(app) as client:
         # app com a sessao da fixture
@@ -48,10 +50,9 @@ def _mock_db_time(*, model, time=datetime(2024, 1, 1)):
     def fake_time_hook(mapper, connection, target):
         if hasattr(target, 'created_at'):
             target.created_at = time
-        # ! aula 4 exerc 2 - inicio
+        # cria campo updated_at (a4e2)
         if hasattr(target, 'updated_at'):
             target.updated_at = time
-        # ! aula 4 exerc 2 - fim
 
     event.listen(model, 'before_insert', fake_time_hook)
     yield time
@@ -65,12 +66,28 @@ def mock_db_time():
 
 @pytest.fixture
 def user(session):
+    password = 'test_user_pwd'
     user = User(
         username='test_user',
         email='test_user@mail.com',
-        password='test_user_pwd',
+        password=get_password_hash(password),
     )
     session.add(user)
     session.commit()
     session.refresh(user)
+
+    user.clean_password = password  # type: ignore
+
     return user
+
+
+@pytest.fixture
+def token(client, user):
+    response = client.post(
+        '/token',
+        data={
+            'username': user.email,
+            'password': user.clean_password,
+        },
+    )
+    return response.json()['access_token']

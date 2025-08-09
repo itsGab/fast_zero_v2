@@ -9,14 +9,11 @@ def test_root(client):
     assert response.json() == {'message': 'Ola, Mundo!'}
 
 
-# ! aula 02 exerc 01 - inicio
+# read html (a2e1)
 def test_html(client):
     response = client.get('/html')
     assert response.status_code == HTTPStatus.OK
     assert 'Ola Mundo' in response.text
-
-
-# ! aula 2 exerc 01 - fim
 
 
 def test_create_user(client):
@@ -43,7 +40,7 @@ def test_create_user_username_conflict(client, user):
             'username': user.username,  # duplicated
             'email': 'user_created@mail.com',
             'password': 'user_created_pwd',
-        }
+        },
     )
     assert response.status_code == HTTPStatus.CONFLICT
     assert response.json() == {'detail': 'Username already exists'}
@@ -56,7 +53,7 @@ def test_create_user_email_conflict(client, user):
             'username': 'user_created',
             'email': user.email,  # duplicated
             'password': 'user_created_pwd',
-        }
+        },
     )
     assert response.status_code == HTTPStatus.CONFLICT
     assert response.json() == {'detail': 'Email already exists'}
@@ -75,9 +72,10 @@ def test_read_users_with_users(client, user):
     assert response.json() == {'users': [user_schema]}
 
 
-def test_update_user(client, user):
+def test_update_user(client, user, token):
     response = client.put(
-        '/users/1',
+        f'/users/{user.id}',
+        headers={'Authorization': f'Bearer {token}'},
         json={
             'username': 'user_updated',
             'email': 'user_updated@mail.com',
@@ -88,26 +86,27 @@ def test_update_user(client, user):
     assert response.json() == {
         'username': 'user_updated',
         'email': 'user_updated@mail.com',
-        'id': 1,
+        'id': user.id,
     }
 
 
-def test_update_integrity_error(client, user):
+def test_update_integrity_error(client, user, token):
     client.post(
         '/users',
         json={
             'username': 'integrity',
             'email': 'integrity@mail.com',
             'password': 'integrity_pwd',
-        }
+        },
     )
     response_update = client.put(
         f'/users/{user.id}',
+        headers={'Authorization': f'Bearer {token}'},
         json={
             'username': 'integrity',
             'email': 'test_user@mail.com',
             'password': 'test_user_pwd',
-        }
+        },
     )
     assert response_update.status_code == HTTPStatus.CONFLICT
     assert response_update.json() == {
@@ -115,52 +114,52 @@ def test_update_integrity_error(client, user):
     }
 
 
-def test_delete_user(client, user):
-    response = client.delete('/users/1')
+def test_delete_user(client, user, token):
+    response = client.delete(
+        f'/users/{user.id}',
+        headers={'Authorization': f'Bearer {token}'},
+    )
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {'message': 'User deleted'}
 
-# ! aula 05 exerc 03 - inicio 
-# ! aula 03 exerc 01, 02 e 03 - inicio
-# 1. test not found put
-def test_update_user_not_found(client, user):
-    response = client.put(
-        '/users/2',
-        json={
-            'username': 'not_found_user',
-            'email': 'not_found_user@mail.com',
-            'password': 'not_found_user_pwd',
-        },
+
+# exercicio: user by id (a3e3)
+def test_read_user_by_id(client, user, token):
+    response = client.get(
+        f'/user/{user.id}',
+        headers={'Authorization': f'Bearer {token}'}
     )
-    assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json() == {'detail': 'User not found'}
-
-
-# 2. test not found delete
-def test_delete_user_not_found(client, user):
-    response = client.delete('/users/2')
-    assert response.status_code == HTTPStatus.NOT_FOUND
-    assert response.json() == {'detail': 'User not found'}
-
-
-# 3. test user by id and user user not found by id
-# 3.1.user by id
-def test_read_user_by_id(client, user):
-    response = client.get('/user/1')
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         'username': 'test_user',
         'email': 'test_user@mail.com',
-        'id': 1,
+        'id': user.id,
     }
 
 
-# 3.2. user not found by id
 def test_read_user_by_id_not_found(client, user):
     response = client.get('/user/2')
+
     assert response.status_code == HTTPStatus.NOT_FOUND
     assert response.json() == {'detail': 'User not found'}
 
 
-# ! aula 03 exerc 01, 02 e 03 - fim
-# ! aula 05 exerc 03 - fim
+def test_get_token(client, user):
+    response = client.post(
+        '/token',
+        data={
+            'username': user.email,
+            'password': user.clean_password,
+        },
+    )
+    token = response.json()
+
+    assert response.status_code == HTTPStatus.OK
+    assert 'access_token' in token
+    assert 'token_type' in token
+
+
+# TODO: test update user NOT ENOUGH PERMISSIONS
+# TODO: test delete user NOT ENOUGH PERMISSIONS
+# TODO: test login for access token UNAUTHORIZED incorrect email
+# TODO: test login for access token UNAUTHORIZED incorrect password
