@@ -11,26 +11,28 @@ from sqlalchemy.orm import Session
 
 from fast_zero.database import get_session
 from fast_zero.models import User
+from fast_zero.settings import Settings
 
-SECRET_KEY = 'your-secret-key'  # provisorio
-ALGORITHM = 'HS256'
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+settings = Settings()  # type: ignore
+
 pwd_context = PasswordHash.recommended()
 
-oath2_scheme = OAuth2PasswordBearer(tokenUrl='token')
+oath2_scheme = OAuth2PasswordBearer(tokenUrl='auth/token')
 
 
 def create_access_token(data: dict):  # define funcao
     to_encode = data.copy()  # cria um copia do dados para encodar
     # define o tempo de expiracao
     expire = datetime.now(tz=ZoneInfo('UTC')) + timedelta(
-        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
     )
     # adiciona o horario de expiracao no payload
     to_encode.update({'exp': expire})
     # cria o json web token
     encoded_jwt = encode(
-        payload=to_encode, key=SECRET_KEY, algorithm=ALGORITHM
+        payload=to_encode,
+        key=settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM
     )
     return encoded_jwt  # retorno jwt
 
@@ -54,7 +56,11 @@ def get_current_user(
     )
 
     try:
-        payload = decode(jwt=token, key=SECRET_KEY, algorithms=[ALGORITHM])
+        payload = decode(
+            jwt=token,
+            key=settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM]
+        )
         subject_email = payload.get('sub')
 
         if not subject_email:
