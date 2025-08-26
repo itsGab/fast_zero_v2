@@ -113,12 +113,11 @@ def test_delete_user(client, user, token):
 # exercicio: user by id (a3e3)
 def test_read_user_by_id(client, user, token):
     response = client.get(
-        f'/users/{user.id}',
-        headers={'Authorization': f'Bearer {token}'}
+        f'/users/{user.id}', headers={'Authorization': f'Bearer {token}'}
     )
     assert response.json() == {
-        'username': 'test_user',
-        'email': 'test_user@mail.com',
+        'username': user.username,
+        'email': user.email,
         'id': user.id,
     }
     assert response.status_code == HTTPStatus.OK
@@ -132,9 +131,9 @@ def test_read_user_by_id_not_found(client, user):
 
 
 # test update user NOT ENOUGH PERMISSIONS
-def test_update_user_forbidden(client, user, token):
+def test_update_user_forbidden(client, user, other_user, token):
     response = client.put(
-        '/users/2',
+        f'/users/{other_user.id}',
         headers={'Authorization': f'Bearer {token}'},
         json={
             'username': user.username,
@@ -143,19 +142,14 @@ def test_update_user_forbidden(client, user, token):
         },
     )
     assert response.status_code == HTTPStatus.FORBIDDEN
-    assert response.json() == {
-        'detail': 'Not enough permissions'
-    }
+    assert response.json() == {'detail': 'Not enough permissions'}
 
 
 # test delete user NOT ENOUGH PERMISSIONS
-def test_delete_user_forbidden(client, user, token):
+def test_delete_user_forbidden(client, user, other_user, token):
     response = client.delete(
-        '/users/2',
-        headers={'Authorization': f'Bearer {token}'}
+        f'/users/{other_user.id}', headers={'Authorization': f'Bearer {token}'}
     )
 
     assert response.status_code == HTTPStatus.FORBIDDEN
-    assert response.json() == {
-        'detail': 'Not enough permissions'
-    }
+    assert response.json() == {'detail': 'Not enough permissions'}

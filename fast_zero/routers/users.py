@@ -23,9 +23,7 @@ DbSession = Annotated[AsyncSession, Depends(get_session)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
-@router.post(
-    '/', status_code=HTTPStatus.CREATED, response_model=UserPublic
-)
+@router.post('/', status_code=HTTPStatus.CREATED, response_model=UserPublic)
 async def create_user(user: UserSchema, session: DbSession):
     # consulta se usuario ja esta cadastrado no banco de dados.
     db_user = await session.scalar(
@@ -62,7 +60,8 @@ async def create_user(user: UserSchema, session: DbSession):
 
 @router.get('/', response_model=UserList)
 async def read_users(
-    session: DbSession, filter_users: Annotated[FilterPage, Query()],
+    session: DbSession,
+    filter_users: Annotated[FilterPage, Query()],
 ):
     query = await session.scalars(
         select(User).offset(filter_users.offset).limit(filter_users.limit)

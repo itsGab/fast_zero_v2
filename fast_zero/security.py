@@ -32,7 +32,7 @@ def create_access_token(data: dict):  # define funcao
     encoded_jwt = encode(
         payload=to_encode,
         key=settings.SECRET_KEY,
-        algorithm=settings.ALGORITHM
+        algorithm=settings.ALGORITHM,
     )
     return encoded_jwt  # retorno jwt
 
@@ -57,9 +57,7 @@ async def get_current_user(
 
     try:
         payload = decode(
-            jwt=token,
-            key=settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM]
+            jwt=token, key=settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
         subject_email = payload.get('sub')
 
