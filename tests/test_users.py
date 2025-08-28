@@ -77,22 +77,14 @@ def test_update_user(client, user, token):
     }
 
 
-def test_update_integrity_error(client, user, token):
-    client.post(
-        '/users',
-        json={
-            'username': 'integrity',
-            'email': 'integrity@mail.com',
-            'password': 'integrity_pwd',
-        },
-    )
+def test_update_integrity_error(client, user, other_user, token):
     response_update = client.put(
         f'/users/{user.id}',
         headers={'Authorization': f'Bearer {token}'},
         json={
-            'username': 'integrity',
-            'email': 'test_user@mail.com',
-            'password': 'test_user_pwd',
+            'username': other_user.username,  # username duplicado
+            'email': user.email,
+            'password': user.clean_password,
         },
     )
     assert response_update.status_code == HTTPStatus.CONFLICT
