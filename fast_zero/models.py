@@ -46,5 +46,15 @@ class Todo:
     title: Mapped[str]
     description: Mapped[str]
     state: Mapped[TodoState]
+    # ! aula 10 exerc 1 - inicio
+    created_at: Mapped[datetime] = mapped_column(
+        init=False, server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        init=False, server_default=func.now(), onupdate=func.now()
+    )
+    # ! aula 10 exerc 1 - fim
 
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+
+    user: Mapped[User] = relationship(init=False, back_populates='todos')

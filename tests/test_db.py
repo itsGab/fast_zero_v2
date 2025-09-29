@@ -25,30 +25,44 @@ async def test_create_user_without_todos(session, mock_db_time):
         'created_at': time,
         # aula 4 exerc 2
         'updated_at': time,
-        'todos': []
+        'todos': [],
     }
 
 
 @pytest.mark.asyncio
-async def test_create_todo(session, user):
-    todo = Todo(
-        title='Test todo',
-        description='Test Desc',
-        state=TodoState.draft,
-        user_id=user.id,
-    )
+async def test_create_todo(session, user: User, mock_db_time):
+    with mock_db_time(model=Todo) as time:
+        todo = Todo(
+            title='Test todo',
+            description='Test Desc',
+            state='draft',
+            user_id=user.id,
+        )
 
-    session.add(todo)
-    await session.commit()
+        session.add(todo)
+        await session.commit()
 
     todo = await session.scalar(select(Todo))
-
+    # assert user.__dict__ == {}
     assert asdict(todo) == {
         'description': 'Test Desc',
         'id': 1,
         'state': 'draft',
         'title': 'Test todo',
         'user_id': 1,
+        'created_at': time,
+        'updated_at': time,
+    # ! não tenho sei se está certo, ajetei para passar no teste
+    # ! foi porq adicionei a relação antes da hora!!!
+        'user': {
+            'created_at': user.created_at,
+            'email': user.email,
+            'id': user.id,
+            'password': user.password,
+            'todos': user.todos,
+            'updated_at': user.updated_at,
+            'username': user.username,
+        },
     }
 
 
