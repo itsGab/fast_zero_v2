@@ -1,7 +1,7 @@
 [project]
 name = "fast-zero"
 version = "0.1.0"
-description = ""
+description = "seguindo o curso de fastapi do eduardo"
 authors = [
     {name = "gabriel",email = "you@example.com"}
 ]
