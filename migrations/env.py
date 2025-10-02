@@ -1,4 +1,5 @@
 import asyncio
+import sys
 
 from logging.config import fileConfig
 
@@ -72,6 +73,9 @@ def run_migrations_online() -> None:
     """
     asyncio.run(run_async_migrations())
 
+
+if sys.platform == 'win32':  # para rodar no windows
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 if context.is_offline_mode():
     run_migrations_offline()

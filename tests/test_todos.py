@@ -2,9 +2,9 @@ from http import HTTPStatus
 
 import factory.fuzzy
 import pytest
-from sqlalchemy import select
+from sqlalchemy.exc import DataError
 
-from fast_zero.models import Todo, TodoState
+from fast_zero.models import Todo, TodoState, User
 
 
 def test_create_todo(client, token, mock_db_time):
@@ -237,7 +237,7 @@ async def test_list_todos_should_return_all_expected_fields(
 
 # ! aula 10 exerc 5 - inicio
 @pytest.mark.asyncio
-async def test_create_todo_state_error(session, user):
+async def test_create_todo_state_error(session, user: User):
     todo = Todo(
         title='Test',
         description='testing',
@@ -246,10 +246,9 @@ async def test_create_todo_state_error(session, user):
     )
 
     session.add(todo)
-    await session.commit()
 
-    with pytest.raises(LookupError):
-        await session.scalar(select(Todo))
+    with pytest.raises(DataError):
+        await session.commit()
 # ! aula 10 exerc 5 - fim
 
 
